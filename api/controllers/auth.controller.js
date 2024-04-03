@@ -1,28 +1,34 @@
-// auth.controller.js
 import User from '../models/user.model.js';
-import bcryptjs  from 'bcryptjs';
+import bcryptjs from 'bcryptjs';
+import { errorHandler } from '../utils/error.js';
+// import jwt from 'jsonwebtoken';
+
 export const signup = async (req, res, next) => {
   const { username, email, password } = req.body;
 
-  
-    // Basic validation
-    if (!username || !email || !password || username === '' || email === '' || password === '') {
-      return res.status(400).json({ message: 'All fields are required' });
-    
-    }
-    const hashPassword = bcryptjs.hashPassword(password , 10);
-    const newUser = new User({
-        username,
-        email,
-        password,
-      });
+  if (
+    !username ||
+    !email ||
+    !password ||
+    username === '' ||
+    email === '' ||
+    password === ''
+  ) {
+    next(errorHandler(400, 'All fields are required'));
+  }
 
-      try{
+  const hashedPassword = bcryptjs.hashSync(password, 10);
 
-          await newUser.save();
-          res.json('New user created!');
-      }
-      catch (error){
-        res.status(500).json({message:error.message});
-}
+  const newUser = new User({
+    username,
+    email,
+    password: hashedPassword,
+  });
+
+  try {
+    await newUser.save();
+    res.json('Signup successful');
+  } catch (error) {
+    next(error);
+  }
 };
